@@ -1,3 +1,27 @@
+def mass_estimate(BOM_dictionary, h_len, v_len, d_matrix):
+  #initial mass (grams)
+  mass_list = [2 * h_len, 2 * v_len, 533, 117, 95, 227, 57, 334]
+  qty_list = list(BOM_dictionary.values())
+
+  mass_total_grams = 0
+  i = 0
+  for i in range(len(qty_list[:8])):
+    mass_total_grams += mass_list[i] * qty_list[i]
+  
+  mass_total_pounds = mass_total_grams // 454
+
+  mass_cabs = 5000 * (d_matrix[0] * d_matrix[1])
+  mass_cabs_pounds = mass_cabs // 454
+  
+  print("\n\nEstimated Frame Weight (no cabinets): {}kg ({} lbs).".format(mass_total_grams//1000, mass_total_pounds))
+  print("\nEstimated Total Weight (with cabinets): {}kg ({} lbs).".format((mass_total_grams + mass_cabs)//1000, mass_total_pounds + mass_cabs_pounds))
+
+  # hor_mass = BOM_dictionary["Horizontal Extrusions"] * h_len * 2 #2 grams per mm
+  # vert_mass = BOM_dictionary["Vertical Extrusions"] * v_len * 2
+  # wp_mass = BOM_dictionary["Wall Plates"] * 533
+  
+
+
 def BOM_printer(BOM_dictionary):
   print("\n QTY.\tPART")
   print("-----\t-----")
@@ -71,7 +95,7 @@ def vert_wall_conflict(wall_list, vert_pos_list):
 
 def wall_pos(hor_len, end_buff):
   wall_count = 1
-  max_wall = 700
+  max_wall = 1000
   wall_first = 200 + end_buff #dist to wall CL from left edge
 
   wall_list = [wall_first]
@@ -114,8 +138,8 @@ def main():
 
   #initialize data
   disp = (500, 500) #wide, tall
-  corner = (30, 30) #wide, tall
-  disp_matrix = (2, 2) #wide, tall
+  corner = (30, 30) # wide, tall
+  disp_matrix = (4, 4) #wide, tall
   flag_dims = (160, 80) #wide, tall
   
   flag_pad = (15, (flag_dims[1] - corner[1])//2)
@@ -138,7 +162,7 @@ def main():
 
   #find flag positions
   final_flag_list = space_finder(flag_pad[1] + corner[1]/2, disp[1], disp_matrix[1], corner[1], vert_len)
-  final_flag_list.insert(0, "Vertical Flag Positions (mm)\n  From bottom edge to flag centerline")
+  final_flag_list.insert(0, "Vertical Flag Positions (mm):\n  From bottom edge to flag centerline")
   
 
   print("\nInitial data:\n  Display Size (mm): {}mm x {}mm\n  Matrix Size (W x H): {} x {}".format(disp[0], disp[1],disp_matrix[0], disp_matrix[1]))
@@ -148,6 +172,8 @@ def main():
   dimension_reporter([final_vert_list, final_hor_list, final_wall_list, final_flag_list])
 
   BOM_printer(part_counter(final_hor_list[1:], final_vert_list[1:], final_wall_list[1:], final_flag_list[1:]))
+
+  mass_estimate(part_counter(final_hor_list[1:], final_vert_list[1:], final_wall_list[1:], final_flag_list[1:]), hor_len, vert_len, disp_matrix)
 
 if __name__ == "__main__":
   main()
