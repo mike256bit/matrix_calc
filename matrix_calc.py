@@ -1,3 +1,32 @@
+def BOM_printer(BOM_dictionary):
+  print("\n QTY.\tPART")
+  print("-----\t-----")
+  for k, v in BOM_dictionary.items():
+    print("  "+str(v)+"\t"+str(k))
+
+def part_counter(h_list, v_list, wp_list, f_list):
+  h_ext_count = len(h_list) #derive from list
+  v_ext_count = len(v_list) #derive from list
+  wp_count = h_ext_count * len(wp_list) #derive from list * h_ext, covers the top and bottom brackets
+  v_bkt_count = h_ext_count * v_ext_count #derive from h_count * v_count (*2 for vert side brackets)
+  flag_count = v_ext_count * len(f_list) #derive from flag list * v_count
+  
+  BOM_dict = {}
+  BOM_dict["Horizonal Extrusions"] = h_ext_count
+  BOM_dict["Vertical Extrusions"] = v_ext_count
+  BOM_dict["Wall Plates"] = wp_count
+  BOM_dict["Hor. Ext. Top Bkts"] = wp_count
+  BOM_dict["Hor. Ext. Bottom Bkts"] = wp_count
+  BOM_dict["Vertical Plate Bkts"] = v_bkt_count
+  BOM_dict["Vertical Attach Bkts"] = v_bkt_count * 2
+  BOM_dict["Flags"] = flag_count
+  BOM_dict["M6 Cap Screw"] = 4 * wp_count + 8 * v_bkt_count
+  BOM_dict["M6 T-SLot Nut"] = BOM_dict["M6 Cap Screw"]
+  BOM_dict["M6 C'sunk Screw"] = 4 * flag_count
+  BOM_dict["M6 Wingnut"] = 4 * wp_count + 2 * v_bkt_count
+
+  return BOM_dict
+
 def dimension_reporter(dim_lists):
 
   for each in dim_lists:
@@ -86,7 +115,7 @@ def main():
   #initialize data
   disp = (500, 500) #wide, tall
   corner = (30, 30) #wide, tall
-  disp_matrix = (4, 4) #wide, tall
+  disp_matrix = (2, 2) #wide, tall
   flag_dims = (160, 80) #wide, tall
   
   flag_pad = (15, (flag_dims[1] - corner[1])//2)
@@ -117,6 +146,8 @@ def main():
   print("\n  Horizontal: {}mm\n  Vertical: {}mm\n".format(hor_len - end_buffer * 2, vert_len))
 
   dimension_reporter([final_vert_list, final_hor_list, final_wall_list, final_flag_list])
+
+  BOM_printer(part_counter(final_hor_list[1:], final_vert_list[1:], final_wall_list[1:], final_flag_list[1:]))
 
 if __name__ == "__main__":
   main()
