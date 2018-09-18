@@ -1,3 +1,20 @@
+import datetime
+
+def data_writer(start_data, ext_len_data, data_list, write_file):
+  
+  w_f = open(write_file, "a")
+  
+  w_f.write("\n\n"+str(datetime.datetime.now())[:-7]+"\n")
+  for each in [start_data, ext_len_data]:
+      w_f.write(each+"\n")
+      print(each)
+  for each_list in data_list:
+    for each in each_list:
+      w_f.write(each+"\n")
+      print(each)
+  
+  w_f.close()
+
 def mass_estimate(BOM_dictionary, h_len, v_len, d_matrix):
   #initial mass (grams)
   mass_list = [2 * h_len, 2 * v_len, 533, 117, 95, 227, 57, 334]
@@ -10,23 +27,25 @@ def mass_estimate(BOM_dictionary, h_len, v_len, d_matrix):
   
   mass_total_pounds = mass_total_grams // 454
 
-  mass_cabs = 5000 * (d_matrix[0] * d_matrix[1])
-  mass_cabs_pounds = mass_cabs // 454
+  return_report = []
+  for each in ["(no cabinets)", "(with cabinets)"]:
+    return_report.append("Estimated Frame Weight {}: {}kg ({} lbs).".format(each, mass_total_grams//1000, mass_total_pounds))
+    mass_total_grams += 5000 * (d_matrix[0] * d_matrix[1])
+    mass_total_pounds =  mass_total_grams // 454
   
-  print("\n\nEstimated Frame Weight (no cabinets): {}kg ({} lbs).".format(mass_total_grams//1000, mass_total_pounds))
-  print("\nEstimated Total Weight (with cabinets): {}kg ({} lbs).".format((mass_total_grams + mass_cabs)//1000, mass_total_pounds + mass_cabs_pounds))
-
-  # hor_mass = BOM_dictionary["Horizontal Extrusions"] * h_len * 2 #2 grams per mm
-  # vert_mass = BOM_dictionary["Vertical Extrusions"] * v_len * 2
-  # wp_mass = BOM_dictionary["Wall Plates"] * 533
+  return return_report
   
 
 
 def BOM_printer(BOM_dictionary):
-  print("\n QTY.\tPART")
-  print("-----\t-----")
+  return_report = []
+  return_report.append("QTY.\tPART")
+  return_report.append("-----\t-----")
   for k, v in BOM_dictionary.items():
-    print("  "+str(v)+"\t"+str(k))
+    return_report.append("  "+str(v)+"\t"+str(k))
+  return_report.append("")
+  
+  return return_report
 
 def part_counter(h_list, v_list, wp_list, f_list):
   h_ext_count = len(h_list) #derive from list
@@ -52,12 +71,15 @@ def part_counter(h_list, v_list, wp_list, f_list):
   return BOM_dict
 
 def dimension_reporter(dim_lists):
-
+  
+  return_report = []
   for each in dim_lists:
-    print(each[0])
+    return_report.append(each[0])
     for item in range(1, len(each)):
-      print("\t", item, each[item])
-    print()
+      return_report.append("\t" + str(item) + "  " + str(each[item]))
+    return_report.append("")
+  
+  return return_report
 
 def hor_pos_normal(vert_len):
   
@@ -135,13 +157,19 @@ def hor_vert_len(flag_pad, disp, disp_matrix, corner):
   return (h_v[0], h_v[1])
 
 def main():
-
-  #initialize data
-  disp = (500, 500) #wide, tall
-  corner = (30, 30) # wide, tall
-  disp_matrix = (4, 4) #wide, tall
-  flag_dims = (160, 80) #wide, tall
+  from sys import argv, exit
   
+  data_file = open(argv[1], "r")
+  
+  #initialize data
+  data_from_file = data_file.readline().split()
+  
+  data_file.close()
+
+  disp = (int(data_from_file[0]), int(data_from_file[1]))
+  disp_matrix = (int(data_from_file[2]), int(data_from_file[3]))
+  corner = (int(data_from_file[4]), int(data_from_file[5]))
+  flag_dims = (160, 80) #wide, tall
   flag_pad = (15, (flag_dims[1] - corner[1])//2)
   end_buffer = 10
   
@@ -164,16 +192,18 @@ def main():
   final_flag_list = space_finder(flag_pad[1] + corner[1]/2, disp[1], disp_matrix[1], corner[1], vert_len)
   final_flag_list.insert(0, "Vertical Flag Positions (mm):\n  From bottom edge to flag centerline")
   
+  #collate data into passable variables
+  initial_data = "\nInitial data:\n  Display Size (mm): {}mm x {}mm\n  Matrix Size (W x H): {} x {}\n  Corner Spacing (W X H): {}mm x {}mm\n".format(disp[0], disp[1],disp_matrix[0], disp_matrix[1], corner[0], corner[1])
+  
+  length_data = "\n  Horizontal: {}mm\n  Vertical: {}mm\n".format(hor_len - end_buffer * 2, vert_len)
+  
+  dimension_data = dimension_reporter([final_vert_list, final_hor_list, final_wall_list, final_flag_list])
+  
+  bom_data = BOM_printer(part_counter(final_hor_list[1:], final_vert_list[1:], final_wall_list[1:], final_flag_list[1:]))
 
-  print("\nInitial data:\n  Display Size (mm): {}mm x {}mm\n  Matrix Size (W x H): {} x {}".format(disp[0], disp[1],disp_matrix[0], disp_matrix[1]))
+  mass_data = mass_estimate(part_counter(final_hor_list[1:], final_vert_list[1:], final_wall_list[1:], final_flag_list[1:]), hor_len, vert_len, disp_matrix)
 
-  print("\n  Horizontal: {}mm\n  Vertical: {}mm\n".format(hor_len - end_buffer * 2, vert_len))
-
-  dimension_reporter([final_vert_list, final_hor_list, final_wall_list, final_flag_list])
-
-  BOM_printer(part_counter(final_hor_list[1:], final_vert_list[1:], final_wall_list[1:], final_flag_list[1:]))
-
-  mass_estimate(part_counter(final_hor_list[1:], final_vert_list[1:], final_wall_list[1:], final_flag_list[1:]), hor_len, vert_len, disp_matrix)
+  data_writer(initial_data, length_data, [dimension_data, bom_data, mass_data], argv[1])
 
 if __name__ == "__main__":
   main()
