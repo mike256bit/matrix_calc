@@ -1,3 +1,16 @@
+"""
+TO DO:
+  Replace BOM_Dict with a function that procedurally generates BOM additions as it goes through the part counter.
+  Must be a way to simplfy and refactor.
+  Possible to also add mass value?
+  Generate classes for each part. Yes. Rewrite the code to work with classes. Part class __ini__ might have values for mass,
+    lenght, qty, other
+  
+    
+"""
+  
+
+
 import datetime
 
 def data_writer(start_data, ext_len_data, data_list, write_file):
